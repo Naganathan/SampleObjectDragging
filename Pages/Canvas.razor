@@ -1,0 +1,206 @@
+﻿@page "/canvas"
+
+@using System.ComponentModel
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Converters
+@using Newtonsoft.Json.Serialization
+@using Newtonsoft.Json.Linq
+@using System.Drawing;
+@using System.IO;
+@using System.Runtime.Serialization;
+@using System.Runtime.Serialization.Formatters.Binary;
+@using WebApplication2.Canvas;
+
+@inherits ComponentBase;
+
+    <h3>Canvas</h3>
+    <div id="canvas_layer_div" @onclick="@OnClick" @onmousedown="@OnMouseDown" @onmousemove="@OnMouseMove" @onmouseup="@OnMouseUp" style="width: 100%;height: 700px:position:relative;width:100%; height:700px;position:relative;overflow:hidden;background:#ededed">
+        <svg id="canvas_layer_svg" width="@Width" height="@Height" xmlns="http://www.w3.org/2000/svg">
+            <g>
+                <g id="canvas_layer" style="pointer-events: all;" transform="translate(0,0),scale(1)">
+                    @if (this.Nodes.Count > 0)
+                    {
+                        @foreach (Node node in Nodes)
+                        {
+                            <Node X="node.X" Y="node.Y" Width="node.Width" Height="node.Height"></Node>
+                        }
+                    }
+                </g>
+            </g>
+        </svg>
+    </div>
+    <CascadingValue Value="@this">
+        @ChildContent
+    </CascadingValue>
+
+@code {
+    [Parameter]
+    [DefaultValue("100%")]
+    public float Width { get; set; }
+    [Parameter]
+    [DefaultValue("100%")]
+    public float Height { get; set; }
+
+    [Inject]
+    protected IJSRuntime jsRuntime { get; set; }
+
+
+    public Dictionary<string, object> BindableProperties { get; set; } = new Dictionary<string, object>();
+
+    [Parameter]
+    [JsonIgnore]
+    public RenderFragment ChildContent { get; set; }
+   
+    public void OnClick(MouseEventArgs args)
+    {
+
+    }
+    private Node draggingNode = null;
+    public void OnMouseDown(MouseEventArgs args)
+    {
+        PointF mousePos = new PointF((float)(args.ClientX - 282), (float)(args.ClientY - 145));
+        //mousePos = ConvertClienttoModel(mousePos);
+        foreach (Node node in Nodes)
+        {
+            RectangleF rectangleF = new RectangleF(node.X, node.Y, node.Width, node.Height);
+            if (rectangleF.Contains(mousePos))
+            {
+                draggingNode = node;
+            }
+        }
+        if (draggingNode != null)
+        {
+            this.draggingNode.MouseDown(args, mousePos);
+        }
+    }
+    public void OnMouseMove(MouseEventArgs args)
+    {
+        PointF mousePos = new PointF((float)(args.ClientX - 282), (float)(args.ClientY - 145));
+        if (draggingNode != null)
+        {
+            this.draggingNode.MouseMove(args, mousePos);
+        }
+    }
+    public void OnMouseUp(MouseEventArgs args)
+    {
+        PointF mousePos = new PointF((float)(args.ClientX - 282), (float)(args.ClientY - 145));
+        if (draggingNode != null)
+        {
+            draggingNode.MouseUp(args);
+            draggingNode = null;
+        }
+    }
+
+    public PointF ConvertClienttoModel(PointF curPoint)
+    {
+        var clientRect = jsRuntime.InvokeVoidAsync("GetcanvasPosition", null);
+        PointF retPoint = PointF.Empty;
+
+        return retPoint;
+    }
+
+    [Parameter]
+    public List<Node> Nodes
+    {
+        get
+        {
+            return _nodes;
+        }
+        set
+        {
+            if (this.CompareValues(this._nodes, value))
+            {
+                this._nodes = value;
+                UpdateBindableProperties("nodes", _nodes);
+            }
+        }
+    }
+
+    public List<WebApplication2.Canvas.Node> _nodes = new List<WebApplication2.Canvas.Node>();
+    public List<WebApplication2.Canvas.Node> _internalNodes = new List<WebApplication2.Canvas.Node>();
+
+
+    internal Node CheckTagLevelNode(int id)
+    {
+        foreach(Node node in Nodes)
+        {
+            if(node._idCount == id)
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        StateHasChanged();
+    }
+
+    public bool CompareValues(object oldValue, object newValue)
+    {
+        string NewValue = JsonConvert.SerializeObject(newValue);
+        string OldValue = JsonConvert.SerializeObject(oldValue);
+        return NewValue != OldValue;
+    }
+    private string SerialiazeBindableProp(Dictionary<string, object> bindableProp)
+    {
+        JsonSerializerSettings settings = new JsonSerializerSettings();
+        settings.Converters.Add(new StringEnumConverter());
+        return JsonConvert.SerializeObject(bindableProp, Formatting.Indented, settings);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+    }
+
+    public void Add(Node node)
+    {
+        this._nodes.Add(node);
+        StateHasChanged();
+    }
+
+    public void UpdateBindableProperties(string key, object value)
+    {
+        if (this.BindableProperties.ContainsKey(key))
+        {
+            this.BindableProperties[key] = value;
+        }
+        else
+        {
+            this.BindableProperties.Add(key, value);
+        }
+    }
+
+    public void Save(string fileName)
+    {
+        //Create the stream to add object into it.
+        System.IO.Stream ms = File.OpenWrite(fileName);
+        //Format the object as Binary
+
+        BinaryFormatter formatter = new BinaryFormatter();
+        //It serialize the employee object
+        formatter.Serialize(ms, Nodes);
+        ms.Flush();
+        ms.Close();
+        ms.Dispose();
+    }
+    public object Load(string fileName)
+    {
+        //Format the object as Binary
+        BinaryFormatter formatter = new BinaryFormatter();
+
+        //Reading the file from the server
+        FileStream fs = File.Open(fileName, FileMode.Open);
+
+        List<Node> obj = (List<Node>)formatter.Deserialize(fs);
+        Nodes = obj;
+        fs.Flush();
+        fs.Close();
+        fs.Dispose();
+        return obj;
+    }
+}
+

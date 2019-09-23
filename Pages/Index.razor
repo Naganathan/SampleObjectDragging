@@ -1,0 +1,85 @@
+﻿@page "/"
+
+@using WebApplication2.Canvas;
+
+
+<button value="button" @onclick="AddNode">AddNode</button>
+<button value="button" @onclick="AddNode1">AddNode</button>
+<button value="button" @onclick="UpdateWidth">UpdateWidth</button>
+<button value="button" @onclick="Save">Save</button>
+<button value="button" @onclick="Load">Load</button>
+
+@*<Counter @ref="Counter" width ="1000"></Counter>*@
+<Canvas @ref="@canvas" Width="1500" Height="700">
+   <Node @ref="node" X="100" Y="100" Width="100" Height="100"></Node>
+</Canvas>
+
+@code{
+    float width = 100;
+    Canvas canvas;
+    Counter Counter;
+    Node node;
+    public void AddNode()
+    {
+        //Counter.width = 100001;
+        Node node = new Node()
+        {
+            Width = 100,
+            Height = 100,
+            X = 300,
+            Y = 100,
+        };
+        this.canvas.Add(node);
+        node = new Node()
+        {
+            Width = 100,
+            Height = 100,
+            X = 300,
+            Y = 300,
+        };
+        this.canvas.Add(node);
+        StateHasChanged();
+    }
+    public void AddNode1()
+    {
+        this.canvas.Nodes = new List<Node>()
+        {
+            new Node()
+            {
+            Width = 200,
+            Height = 100,
+            X = 300,
+            Y = 400,
+            },
+            new Node()
+            {
+            Width = 200,
+            Height = 100,
+            X = 100,
+            Y = 400,
+            }
+        };
+        StateHasChanged();
+    }
+
+    public void UpdateWidth()
+    {
+        //this.diagram.Nodes[0].Width = 200;
+        //node.Width = 200;
+        StateHasChanged();
+    }
+    public void Save()
+    {
+        this.canvas.Save("..//..//canvas.txt");
+    }
+
+    public void Load()
+    {
+        this.canvas.Load("..//..//canvas.txt");
+    }
+
+    protected override void OnInitialized()
+    {
+        StateHasChanged();
+    }
+}

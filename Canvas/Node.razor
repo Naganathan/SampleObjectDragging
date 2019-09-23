@@ -1,0 +1,155 @@
+﻿@using Microsoft.AspNetCore.Components;
+@using Microsoft.AspNetCore.Components.Rendering;
+@using Microsoft.AspNetCore.Components.Web;
+@using System;
+@using System.Collections.Generic;
+@using System.Drawing;
+@using System.Linq;
+@using System.Text.Json.Serialization;
+@using System.Threading.Tasks;
+@using System.IO;
+@using System.Runtime.Serialization;
+@using System.Runtime.Serialization.Formatters.Binary;
+@using System.ComponentModel;
+
+@inherits ComponentBase;
+
+<g id="node_element" xmlns="http://www.w3.org/2000/svg">
+    <rect id="node" x="@X" y="@Y" width="@Width" height="@Height" fill="blue" stroke-width="5"></rect>
+</g>
+
+<CascadingValue Value="@this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    private string JSNamespace = "node";
+    private string JSProperty = string.Empty;
+    private bool _initialized;
+
+    [CascadingParameter]
+    internal WebApplication2.Pages.Canvas BaseParent { get; set; }
+
+    [Parameter]
+    [JsonIgnore]
+    public RenderFragment ChildContent { get; set; }
+
+    public int _idCount;
+
+    [Parameter]
+    public float Width
+    {
+        get
+        {
+            return _width;
+        }
+        set
+        {
+            if (value != _width)
+            {
+                _width = value;
+                if (this.BaseParent != null)
+                    StateHasChanged();
+            }
+        }
+    }
+    public float _width;
+    [Parameter]
+    public float Height
+    {
+        get { return _height; }
+        set
+        {
+            if (value != _height)
+            {
+                _height = value;
+                if (this.BaseParent != null)
+                    StateHasChanged();
+            }
+        }
+    }
+    private float _height;
+    [Parameter]
+    public float X
+    {
+        get { return _x; }
+        set
+        {
+            if (value != _x)
+            {
+                _x = value;
+                //if (this.BaseParent != null)
+                //    StateHasChanged();
+            }
+        }
+    }
+    private float _x;
+    [Parameter]
+    public float Y
+    {
+        get { return _y; }
+        set
+        {
+            if (value != _y)
+            {
+                _y = value;
+                //if (this.BaseParent != null)
+                //    StateHasChanged();
+            }
+        }
+    }
+    private float _y;
+
+    SizeF sizeOffset = SizeF.Empty;
+    public void MouseDown(MouseEventArgs args, PointF mousePt)
+    {
+        sizeOffset = new SizeF(this._x + _width / 2 - mousePt.X, this._y + _height / 2 - mousePt.Y);
+    }
+    public void MouseMove(MouseEventArgs args, PointF mousePt)
+    {
+        //sizeOffset = new SizeF(sizeOffset.Width - mousePt.X, sizeOffset.Height - mousePt.Y);
+        this.X -= (float)(sizeOffset.Width - _width / 2);
+        this.Y -= (float)(sizeOffset.Height - _height / 2);
+        sizeOffset = new SizeF(this._x + _width / 2 - mousePt.X, this._y + _height / 2 - mousePt.Y);
+    }
+    public void MouseUp(MouseEventArgs args)
+    {
+
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        return base.SetParametersAsync(parameters);
+    }
+
+    public Node Clone()
+    {
+        return new Node(this);
+    }
+    public Node()
+    {
+
+    }
+    public Node(Node src)
+    {
+        this._idCount = src._idCount;
+        this._x = src.X;
+        this._y = src.Y;
+        this._width = src.Width;
+        this._height = src.Height;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (BaseParent != null)
+        {
+            (this.BaseParent.Nodes as List<Node>).Add(Clone() as Node);
+            //(this.BaseParent._internalNodes as List<Node>).Add(this);
+
+            //_idCount = this.BaseParent.Nodes.Count - 1;
+        }
+    }
+}
