@@ -137,12 +137,14 @@
         this._width = src.Width;
         this._height = src.Height;
     }
-
+    
     protected override void OnInitialized()
+
     {
         if (BaseParent != null)
         {
             (this.BaseParent.Nodes as List<Node>).Add(this);
         }
+        StateHasChanged();
     }
 }

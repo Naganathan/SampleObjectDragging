@@ -137,6 +137,11 @@
         base.OnInitialized();
         StateHasChanged();
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            StateHasChanged();
+    }
 
     public bool CompareValues(object oldValue, object newValue)
     {
