@@ -9,7 +9,6 @@
 <button value="button" @onclick="Save">Save</button>
 <button value="button" @onclick="Load">Load</button>
 
-@*<Counter @ref="Counter" width ="1000"></Counter>*@
 <Canvas @ref="@canvas" Width="1500" Height="700">
    <Node @ref="node" X="100" Y="100" Width="100" Height="100"></Node>
 </Canvas>
@@ -64,8 +63,7 @@
 
     public void UpdateWidth()
     {
-        //this.diagram.Nodes[0].Width = 200;
-        //node.Width = 200;
+        node.Width= 200;
         StateHasChanged();
     }
     public void Save()

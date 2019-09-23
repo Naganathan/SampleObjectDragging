@@ -34,8 +34,6 @@
     [JsonIgnore]
     public RenderFragment ChildContent { get; set; }
 
-    public int _idCount;
-
     [Parameter]
     public float Width
     {
@@ -53,7 +51,7 @@
             }
         }
     }
-    public float _width;
+    private float _width;
     [Parameter]
     public float Height
     {
@@ -78,8 +76,8 @@
             if (value != _x)
             {
                 _x = value;
-                //if (this.BaseParent != null)
-                //    StateHasChanged();
+                if (this.BaseParent != null)
+                    StateHasChanged();
             }
         }
     }
@@ -93,8 +91,8 @@
             if (value != _y)
             {
                 _y = value;
-                //if (this.BaseParent != null)
-                //    StateHasChanged();
+                if (this.BaseParent != null)
+                    StateHasChanged();
             }
         }
     }
@@ -107,7 +105,6 @@
     }
     public void MouseMove(MouseEventArgs args, PointF mousePt)
     {
-        //sizeOffset = new SizeF(sizeOffset.Width - mousePt.X, sizeOffset.Height - mousePt.Y);
         this.X -= (float)(sizeOffset.Width - _width / 2);
         this.Y -= (float)(sizeOffset.Height - _height / 2);
         sizeOffset = new SizeF(this._x + _width / 2 - mousePt.X, this._y + _height / 2 - mousePt.Y);
@@ -135,7 +132,6 @@
     }
     public Node(Node src)
     {
-        this._idCount = src._idCount;
         this._x = src.X;
         this._y = src.Y;
         this._width = src.Width;
@@ -146,10 +142,7 @@
     {
         if (BaseParent != null)
         {
-            (this.BaseParent.Nodes as List<Node>).Add(Clone() as Node);
-            //(this.BaseParent._internalNodes as List<Node>).Add(this);
-
-            //_idCount = this.BaseParent.Nodes.Count - 1;
+            (this.BaseParent.Nodes as List<Node>).Add(this);
         }
     }
 }
